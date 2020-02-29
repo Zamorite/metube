@@ -1,30 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:metube/screens/quality.screen.dart';
+import 'package:metube/services/yt.service.dart';
+import 'package:metube/utils/service_locator.dart';
+import 'package:youtube_api/youtube_api.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class VidScreen extends StatefulWidget {
+  final YT_API video;
+
+  const VidScreen({Key key, this.video}) : super(key: key);
+
   @override
   _VidScreenState createState() => _VidScreenState();
 }
 
 class _VidScreenState extends State<VidScreen> {
-  YoutubePlayerController _controller = YoutubePlayerController(
-    initialVideoId: 'iLnmTe5Q2Qw',
-    flags: YoutubePlayerFlags(
-      autoPlay: true,
-      mute: true,
-    ),
-  );
+  YoutubePlayerController _ctrl;
+  YTService _yts = locator.get<YTService>();
+
+  @override
+  void initState() {
+    super.initState();
+
+    _ctrl = YoutubePlayerController(
+      initialVideoId: widget.video.id,
+      flags: YoutubePlayerFlags(
+        autoPlay: true,
+        // mute: true,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
         title: Text(
           'MeTube',
-          style: TextStyle(
-            color: Colors.blue,
-          ),
         ),
         centerTitle: true,
       ),
@@ -34,7 +46,7 @@ class _VidScreenState extends State<VidScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               YoutubePlayer(
-                controller: _controller,
+                controller: _ctrl,
                 showVideoProgressIndicator: true,
                 // progressIndicatorColor: Colors.amber,
                 // progressColors: ProgressBarColors(
@@ -42,7 +54,7 @@ class _VidScreenState extends State<VidScreen> {
                 //     handleColor: Colors.amberAccent,
                 // ),
                 // onReady: () {
-                //     // _controller.addListener(listener);
+                //     // _ctrl.addListener(listener);
                 // },
               ),
               ListTile(
@@ -51,13 +63,13 @@ class _VidScreenState extends State<VidScreen> {
                   horizontal: 15,
                 ),
                 title: Text(
-                  'This is the Spooky Video Title !',
+                  widget.video.title,
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 subtitle: Container(
                   padding: EdgeInsets.symmetric(vertical: 5),
                   child: Text(
-                    'Channel Name',
+                    widget.video.channelTitle,
                     style: TextStyle(fontSize: 18),
                   ),
                 ),
@@ -68,7 +80,7 @@ class _VidScreenState extends State<VidScreen> {
                   horizontal: 15,
                 ),
                 child: Text(
-                  'Lorem ipsum, or lipsum as it is sometimes known, is dummy text used in laying out print, graphic or web designs. The passage is attributed to an unknown typesetter in the 15th century who is thought to have scrambled parts of Cicero\'s De Finibus Bonorum et Malorum for use in a type specimen book.',
+                  widget.video.description,
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontSize: 16),
@@ -85,7 +97,18 @@ class _VidScreenState extends State<VidScreen> {
                     MaterialButton(
                       color: Colors.blue,
                       textColor: Colors.white,
-                      onPressed: () {},
+                      onPressed: () async {
+                        List streams =
+                            await _yts.getAudioStream(widget.video.id);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (ctx) => QualityScreen(
+                              streams: streams,
+                            ),
+                          ),
+                        );
+                      },
                       child: Text('Audio'),
                     ),
                     Flexible(
@@ -100,7 +123,19 @@ class _VidScreenState extends State<VidScreen> {
                     MaterialButton(
                       color: Colors.blue,
                       textColor: Colors.white,
-                      onPressed: () {},
+                      onPressed: () async {
+                        List streams =
+                            await _yts.getVideoStream(widget.video.id);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (ctx) => QualityScreen(
+                              streams: streams,
+                              isVideo: true,
+                            ),
+                          ),
+                        );
+                      },
                       child: Text('Video'),
                     )
                   ],
