@@ -15,7 +15,7 @@ void setup() {
   );
   locator.registerLazySingleton(
     () => YoutubeAPI(
-      kAPIKey,
+      '$kYou$kTube$kApi$kKey',
       type: 'video',
     ),
   );
